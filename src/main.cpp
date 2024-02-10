@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+
     int num_threads = std::thread::hardware_concurrency();
     std::string outputfile = "";
     std::vector<std::string> filenames;

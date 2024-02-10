@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<scene version="0.5.0" >
+	<integrator type="path" >
+		<integer name="maxDepth" value="65" />
+		<boolean name="strictNormals" value="true" />
+	</integrator>
+	<sensor type="perspective" >
+		<float name="fov" value="35" />
+		<transform name="toWorld" >
+			<matrix value="-0.00550949 -0.342144 -0.939631 23.895 1.07844e-005 0.939646 -0.342149 11.2207 0.999985 -0.00189103 -0.00519335 0.0400773 0 0 0 1"/>
+		</transform>
+		<sampler type="independent" >
+			<integer name="sampleCount" value="256" />
+		</sampler>
+		<film type="ldrfilm" >
+			<integer name="width" value="1280" />
+			<integer name="height" value="720" />
+			<string name="fileFormat" value="png" />
+			<string name="pixelFormat" value="rgb" />
+			<float name="gamma" value="2.2" />
+			<boolean name="banner" value="false" />
+			<rfilter type="tent" />
+		</film>
+	</sensor>
+	<bsdf type="twosided" id="Material" >
+		<bsdf type="disneymetal">
+			<rgb name="baseColor" value="0.82 0.67 0.16"/>
+			<float name="roughness" value="0.2"/>
+			<float name="anisotropic" value="0.8"/>
+		</bsdf>
+	</bsdf>
+
+
+	<shape type="obj" >
+		<string name="filename" value="models/Mesh001.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="Material" />
+	</shape>
+	<shape type="obj" >
+		<string name="filename" value="models/Mesh000.obj" />
+		<transform name="toWorld" >
+			<matrix value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
+		</transform>
+		<ref id="Material" />
+	</shape>
+	<emitter type="envmap"  id="Area_002-light">
+		<transform name="toWorld" >
+			<matrix value="-0.922278 0 0.386527 0 0 1 0 0 -0.386527 0 -0.922278 1.17369 0 0 0 1"/>
+		</transform>
+		<string name="filename" value="textures/envmap.hdr" />
+	</emitter>
+</scene>

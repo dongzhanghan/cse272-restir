@@ -56,12 +56,12 @@
 	</bsdf>
 
 	<texture type="checkerboard" id="__planetex">
-		<rgb name="color0" value="0.4"/>
-		<rgb name="color1" value="0.2"/>
-		<float name="uscale" value="8.0"/>
-		<float name="vscale" value="8.0"/>
-		<float name="uoffset" value="0.0"/>
-		<float name="voffset" value="0.0"/>
+		<rgb name="color1" value="0.325, 0.31, 0.25"/>
+				<rgb name="color0" value="0.725, 0.71, 0.68"/>
+				<float name="uoffset" value="0" />
+				<float name="voffset" value="0" />
+				<float name="uscale" value="10" />
+				<float name="vscale" value="10" />
 	</texture>
 
 	<bsdf type="diffuse" id="__planemat">
