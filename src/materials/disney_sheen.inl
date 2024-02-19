@@ -60,7 +60,7 @@ std::optional<BSDFSampleRecord>
     // Homework 1: implement this!
     return BSDFSampleRecord{
         to_world(frame, sample_cos_hemisphere(rnd_param_uv)),
-        Real(0) /* eta */, Real(1) /* roughness */ };
+        Real(0) /* eta */, Real(1) /* roughness */  /*why the roughnes is 1??????*/};
 }
 
 TextureSpectrum get_texture_op::operator()(const DisneySheen &bsdf) const {

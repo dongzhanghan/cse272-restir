@@ -65,6 +65,7 @@ Spectrum eval_op::operator()(const DisneyBSDF &bsdf) const {
 
     bool inside = dot(vertex.geometric_normal, dir_in) <= 0;
     if (inside) {
+        // Only the glass component if the light is under the surface
         f_diffuse = make_const_spectrum(0);
         f_metal = make_const_spectrum(0);
         f_sheen = make_const_spectrum(0);
@@ -80,6 +81,7 @@ Spectrum eval_op::operator()(const DisneyBSDF &bsdf) const {
             w_glass * f_glass;
     }
     else {
+        // Only the glass component for refraction
         f_bsdf = w_glass * f_glass;
     }
 
@@ -125,18 +127,20 @@ Real pdf_sample_bsdf_op::operator()(const DisneyBSDF &bsdf) const {
     Real w_glass = (1 - metallic) * specular_transmission;
     Real w_clearcoat = 0.25 * clearcoat;
     Real total = w_diffuse + w_metal + w_glass + w_clearcoat;
+    //normalize to let the sum weight to be 1, cannot make them a single line
     w_diffuse /= total;
     w_metal /= total;
     w_clearcoat /= total;
     w_glass /= total;
     bool inside = dot(vertex.geometric_normal, dir_in) <= 0;
     if (inside) {
+        // Only the glass component if the light is under the surface
         w_diffuse = 0;
         w_metal = 0;
         w_glass = 1;
         w_clearcoat = 0;
     }
-    if (reflect) {      
+    if (reflect) {  
         struct DisneyDiffuse diffuse = { bsdf.base_color,bsdf.roughness,bsdf.subsurface };
         struct DisneyClearcoat clearcoat = { bsdf.clearcoat_gloss };
         struct DisneyGlass glass = { bsdf.base_color,bsdf.roughness,bsdf.anisotropic,bsdf.eta };
@@ -148,6 +152,7 @@ Real pdf_sample_bsdf_op::operator()(const DisneyBSDF &bsdf) const {
         return pdf;
     }
     else {
+        // Only the glass component for refraction
         struct DisneyGlass glass = { bsdf.base_color,bsdf.roughness,bsdf.anisotropic,bsdf.eta };
         return pdf_sample_bsdf(glass, dir_in, dir_out, vertex, texture_pool);
     }
@@ -198,7 +203,7 @@ std::optional<BSDFSampleRecord>
         w_metal /= total;
         w_clearcoat /= total;
         w_glass /= total;
-        
+        //rescale your random number w for selecting reflection / refraction.
         if (rnd_param_w <= w_diffuse) {
             struct DisneyDiffuse diffuse = { bsdf.base_color,bsdf.roughness,bsdf.subsurface };
             return sample_bsdf(diffuse, dir_in, vertex, texture_pool, rnd_param_uv, rnd_param_w/w_diffuse);
@@ -216,6 +221,7 @@ std::optional<BSDFSampleRecord>
         }
     }
     else {
+        // Only the glass component if the light is under the surface
         struct DisneyGlass glass = { bsdf.base_color,bsdf.roughness,bsdf.anisotropic,bsdf.eta };
         return sample_bsdf(glass,dir_in,vertex,texture_pool,rnd_param_uv,rnd_param_w);
     }

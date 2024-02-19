@@ -3,6 +3,8 @@
 Spectrum eval_op::operator()(const DisneyGlass &bsdf) const {
     bool reflect = dot(vertex.geometric_normal, dir_in) *
                    dot(vertex.geometric_normal, dir_out) > 0;
+    // If we are going into the surface, then we use normal eta
+    // (internal/external), otherwise we use external/internal.
     Real eta = dot(vertex.geometric_normal, dir_in) > 0 ? bsdf.eta : 1 / bsdf.eta;
     // Flip the shading frame if it is inconsistent with the geometry normal
     Frame frame = vertex.shading_frame;
@@ -50,7 +52,7 @@ Spectrum eval_op::operator()(const DisneyGlass &bsdf) const {
     if (reflect) {
         return f_glass_reflected;
     }
-
+    // Burley propose to take the square root of the base color to preserve albedo
     return f_glass_refracted;
 }
 
@@ -58,15 +60,13 @@ Real pdf_sample_bsdf_op::operator()(const DisneyGlass &bsdf) const {
     bool reflect = dot(vertex.geometric_normal, dir_in) *
                    dot(vertex.geometric_normal, dir_out) > 0;
     // Flip the shading frame if it is inconsistent with the geometry normal
-    Real eta = dot(vertex.geometric_normal, dir_in) > 0 ? bsdf.eta : 1 / bsdf.eta;
-    assert(eta > 0);
     Frame frame = vertex.shading_frame;
     if (dot(frame.n, dir_in) * dot(vertex.geometric_normal, dir_in) < 0) {
         frame = -frame;
     }
-    // Homework 1: implement this!
-     // If we are going into the surface, then we use normal eta
-    // (internal/external), otherwise we use external/internal.
+    // If we are going into the surface, then we use normal eta
+   // (internal/external), otherwise we use external/internal.
+    Real eta = dot(vertex.geometric_normal, dir_in) > 0 ? bsdf.eta : 1 / bsdf.eta;
 
     Vector3 half_vector;
     if (reflect) {
@@ -78,7 +78,7 @@ Real pdf_sample_bsdf_op::operator()(const DisneyGlass &bsdf) const {
         half_vector = normalize(dir_in + dir_out * eta);
     }
 
-    // Flip half-vector if it's below surface
+    // Flip half-vector if it's below surface, why ?????????
     if (dot(half_vector, frame.n) < 0) {
         half_vector = -half_vector;
     }

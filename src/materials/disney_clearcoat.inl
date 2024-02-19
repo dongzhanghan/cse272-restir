@@ -11,17 +11,27 @@ Spectrum eval_op::operator()(const DisneyClearcoat &bsdf) const {
     if (dot(frame.n, dir_in) < 0) {
         frame = -frame;
     }
-    // Homework 1: implement this!
+    //why ??????
+    Vector3 half_vector = normalize(dir_in + dir_out);
+    Real n_dot_h = dot(frame.n, half_vector);
+    Real n_dot_out = dot(frame.n, dir_out);
+    Real h_dot_out = dot(half_vector, dir_out);
+    if (n_dot_out <= 0 || n_dot_h <= 0 || h_dot_out <= 0) {
+        return make_zero_spectrum();
+    }
+
     Real clearcoat_gloss = eval(
         bsdf.clearcoat_gloss, vertex.uv, vertex.uv_screen_size, texture_pool);
 
+    // They use a hardcoded IOR 1.5 -> R0 = 0.04
     Real R_0 = 1.0 / 25;
     Vector3 h = normalize(dir_in + dir_out);
     Real F_c = R_0 + (1 - R_0) * pow(1 - abs(dot(h, dir_out)), 5);
-
+    // Generalized Trowbridge-Reitz distribution
     Real alpha_g = (1 - clearcoat_gloss) * 0.1 + clearcoat_gloss * 0.001;
     Real D_c = (alpha_g * alpha_g - 1) / (c_PI * log(alpha_g * alpha_g) * (1 + (alpha_g * alpha_g - 1) * pow(to_local(frame, h).z, 2)));
 
+    // SmithG with fixed alpha
     Real Delta_in = 0.5 * (-1 + sqrt(1 + 1 / (pow(to_local(frame, dir_in).z, 2)) * (pow(to_local(frame, dir_in).x * 0.25, 2) + pow(to_local(frame, dir_in).y * 0.25, 2))));
     Real Delta_out = 0.5 * (-1 + sqrt(1 + 1 / (pow(to_local(frame, dir_out).z, 2)) * (pow(to_local(frame, dir_out).x * 0.25, 2) + pow(to_local(frame, dir_out).y * 0.25, 2))));
     Real G_in = 1 / (1 + Delta_in);
@@ -40,6 +50,13 @@ Real pdf_sample_bsdf_op::operator()(const DisneyClearcoat &bsdf) const {
     Frame frame = vertex.shading_frame;
     if (dot(frame.n, dir_in) < 0) {
         frame = -frame;
+    }
+    Vector3 half_vector = normalize(dir_in + dir_out);
+    Real n_dot_h = dot(frame.n, half_vector);
+    Real n_dot_out = dot(frame.n, dir_out);
+    Real h_dot_out = dot(half_vector, dir_out);
+    if (n_dot_out <= 0 || n_dot_h <= 0 || h_dot_out <= 0) {
+        return 0;
     }
     // Homework 1: implement this!
     Vector3 h = normalize(dir_in + dir_out);
@@ -75,7 +92,7 @@ std::optional<BSDFSampleRecord>
     Vector3 reflected = normalize(-dir_in + 2 * dot(dir_in, half_vector) * half_vector);
     return BSDFSampleRecord{
             reflected,
-            Real(0) /* eta */, 0 /* roughness */
+            Real(0) /* eta */, sqrt(alpha_g) /* roughness */  //why sqrt??????
     };
     return {};
 }

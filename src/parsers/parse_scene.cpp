@@ -565,7 +565,7 @@ RenderOptions parse_integrator(pugi::xml_node node,
             } else if (name == "version") {
                 options.vol_path_version = parse_integer(
                     child.attribute("value").value(), default_map);
-            } else if (name == "maxNullCollisions" || name == "max_null_collisions") {
+            } else if (name == "maxNullCollisions" || name == "max_NullCollisions") {
                 options.max_null_collisions = parse_integer(
                     child.attribute("value").value(), default_map);
             }

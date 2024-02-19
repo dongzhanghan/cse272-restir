@@ -11,7 +11,7 @@ Spectrum eval_op::operator()(const DisneyMetal &bsdf) const {
     if (dot(frame.n, dir_in) < 0) {
         frame = -frame;
     }
-    // Homework 1: implement this!
+    //get parameters
     Vector3 h = normalize(dir_in + dir_out);
     Real alpha_min = 0.0001;
     Spectrum base_color = eval(
@@ -72,7 +72,7 @@ Real pdf_sample_bsdf_op::operator()(const DisneyMetal &bsdf) const {
     Real G_in = 1 / (1 + Delta_in);
 
     Real D_m = 1 / (c_PI * alpha_x * alpha_y * pow((pow((to_local(frame, h).x) / alpha_x, 2) + pow((to_local(frame, h).y) / alpha_y, 2) + pow(to_local(frame, h).z, 2)), 2));
-    // (4 * cos_theta_v) is the Jacobian of the reflectiokn
+    // We use visible normal sampling, so the PDF ~ (G_in * D) / (4 * n_dot_in)
     Real spec_prob = (G_in * D_m) / (4 * abs(dot(dir_in,frame.n)));
 
     return spec_prob;
