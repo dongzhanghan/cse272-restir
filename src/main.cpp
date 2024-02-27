@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Done. Took " << tick(timer) << " seconds." << std::endl;
         imwrite(outputfile, img);
         std::cout << "Image written to " << outputfile << std::endl;
-        delete scene;
+        delete scene.release();
     }
 
     parallel_cleanup();

@@ -115,22 +115,24 @@ Spectrum next_event_estimation_2(const Scene& scene, Vector3 p, int current_medi
             PathVertex vertex = *vertex_;
             next_t = distance(p, vertex.position);
             if (shadow_medium != -1) {
-                Spectrum majorant = get_majorant(scene.media[shadow_medium], ray);
-                Spectrum sigma_a = get_sigma_a(scene.media[shadow_medium], shadow_ray.org);
-                Spectrum sigma_s = get_sigma_s(scene.media[shadow_medium], shadow_ray.org);
-                Spectrum sigma_t = sigma_a + sigma_s;
-                Spectrum sigma_n = majorant - sigma_t;
+                Spectrum majorant = get_majorant(scene.media[shadow_medium], shadow_ray);     
                 Real u = next_pcg32_real<Real>(rng);
                 int channel = std::clamp(int(u * 3), 0, 2);
                 Real accum_t = 0;
                 int iteration = 0;
                 while (true) {
+                    
                     if (majorant[channel] <= 0) break;
                     if (iteration >= scene.options.max_null_collisions) break;
+                    
                     Real t = -log(1 - next_pcg32_real<Real>(rng)) / majorant[channel];
                     Real dt = next_t - accum_t;
                     accum_t = min(accum_t + t, next_t);
                     if (t < dt) {
+                        Spectrum sigma_a = get_sigma_a(scene.media[shadow_medium], shadow_ray.org + accum_t * shadow_ray.dir);
+                        Spectrum sigma_s = get_sigma_s(scene.media[shadow_medium], shadow_ray.org + accum_t * shadow_ray.dir);
+                        Spectrum sigma_t = sigma_a + sigma_s;
+                        Spectrum sigma_n = majorant - sigma_t;
                         T_light *= exp(-majorant * t) * sigma_n / max(majorant);
                         p_trans_nee *= exp(-majorant * t) * majorant / max(majorant);
                         Spectrum real_prob = sigma_t / majorant;
@@ -168,7 +170,7 @@ Spectrum next_event_estimation_2(const Scene& scene, Vector3 p, int current_medi
         Real G = max(-dot(dir_light, p_prime.normal), Real(0)) /
             distance_squared(p_prime.position, ray.org);
         Spectrum Le = emission(light, -dir_light, Real(0), p_prime, scene);
-        if (is_phase) {
+        if (is_phase ) {
             PhaseFunction phase = get_phase_function(scene.media[current_medium]);
             Spectrum rho = eval(phase, -ray.dir, dir_light);
             Spectrum pdf_nee = p_trans_nee*light_pmf(scene, light_id) *
@@ -318,7 +320,6 @@ Spectrum vol_path_tracing_3(const Scene &scene,
     int max_depth = scene.options.max_depth;
     while (true){
         bool scatter = false;
-        RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
         std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
         Spectrum transmittance = fromRGB(Vector3{ 1, 1, 1 });
         Spectrum trans_pdf = fromRGB(Vector3{ 1, 1, 1 });
@@ -358,12 +359,13 @@ Spectrum vol_path_tracing_3(const Scene &scene,
             }
             radiance += current_path_throughput * Le;
         }
-        if ((bounces == max_depth - 1) && (max_depth != -1)) break;
+        if ((bounces >= max_depth - 1) && (max_depth != -1)) break;
         if (!scatter && vertex_) {
             PathVertex vertex = *vertex_;
             if (vertex.material_id == -1) {
                 current_medium = update_medium(ray, vertex, current_medium);
                 bounces += 1;
+                ray = Ray{ (*vertex_).position, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
                 continue;
             }
         }
@@ -475,6 +477,7 @@ Spectrum vol_path_tracing_4(const Scene &scene,
             if (vertex.material_id == -1) {
                 current_medium = update_medium(ray, vertex, current_medium);
                 bounces += 1;
+                ray = Ray{ (*vertex_).position, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
                 continue;
             }
         }
@@ -579,7 +582,6 @@ Spectrum vol_path_tracing_5(const Scene& scene,
     Real eta_scale = 1;
     while (true) {
         bool scatter = false;
-        RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
         std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
         Spectrum transmittance = fromRGB(Vector3{ 1, 1, 1 });
         Spectrum trans_pdf = fromRGB(Vector3{ 1, 1, 1 });
@@ -625,6 +627,7 @@ Spectrum vol_path_tracing_5(const Scene& scene,
             if (vertex.material_id == -1) {
                 current_medium = update_medium(ray, vertex, current_medium);
                 bounces += 1;
+                ray = Ray{ (*vertex_).position, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
                 continue;
             }
         }
@@ -654,7 +657,7 @@ Spectrum vol_path_tracing_5(const Scene& scene,
             
 
         }
-        if ((bounces == max_depth - 1) && (max_depth != -1)) break;
+        if ((bounces >= max_depth - 1) && (max_depth != -1)) break;
 
         if (scatter) {
             never_scatter = false;
@@ -750,7 +753,6 @@ Spectrum vol_path_tracing(const Scene& scene,
     Ray ray = sample_primary(scene.camera, screen_pos);
     //std::cout << scene.options.max_null_collisions << std::endl;
     //disable ray differentials
-    RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
     int current_medium = scene.camera.medium_id;
     Spectrum current_path_throughput = make_const_spectrum(1);
     Spectrum radiance = make_zero_spectrum();
@@ -761,9 +763,11 @@ Spectrum vol_path_tracing(const Scene& scene,
     bool never_scatter = true;
     int max_depth = scene.options.max_depth;
     Real eta_scale = 1;
+    RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
     while (true) {
+        
         bool scatter = false;
-        RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
+       
         std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
         Spectrum transmittance = make_const_spectrum(1);
         Spectrum trans_dir_pdf = make_const_spectrum(1);
@@ -778,10 +782,7 @@ Spectrum vol_path_tracing(const Scene& scene,
         }
         if (current_medium != -1) {
             Spectrum majorant = get_majorant(scene.media[current_medium], ray);
-            Spectrum sigma_a = get_sigma_a(scene.media[current_medium], ray.org);
-            Spectrum sigma_s = get_sigma_s(scene.media[current_medium], ray.org);
-            Spectrum sigma_t = sigma_a + sigma_s;
-            Spectrum sigma_n = majorant - sigma_t;
+           
             Real u = next_pcg32_real<Real>(rng);
             int channel = std::clamp(int(u * 3), 0, 2);
             Real accum_t = 0;
@@ -790,11 +791,16 @@ Spectrum vol_path_tracing(const Scene& scene,
             while (true) {
                 if (majorant[channel] <= 0) break;
                 if (iteration >= scene.options.max_null_collisions) break;
+                
                 Real t = -log(1 - next_pcg32_real<Real>(rng)) / majorant[channel];
                 Real dt = t_hit - accum_t;
                 //Update accumulated distance
                 accum_t = min(accum_t + t, t_hit);
                 if (t < dt) {
+                    Spectrum sigma_a = get_sigma_a(scene.media[current_medium], ray.org + accum_t * ray.dir);
+                    Spectrum sigma_s = get_sigma_s(scene.media[current_medium], ray.org + accum_t * ray.dir);
+                    Spectrum sigma_t = sigma_a + sigma_s;
+                    Spectrum sigma_n = majorant - sigma_t;
                     Spectrum real_prob = sigma_t / majorant;
                     if (next_pcg32_real<Real>(rng) < real_prob[channel]) {
                         scatter = true;
@@ -829,14 +835,17 @@ Spectrum vol_path_tracing(const Scene& scene,
         }
         multi_trans_pdf *= trans_dir_pdf;
         current_path_throughput *= (transmittance / avg(trans_dir_pdf));
+        if ((bounces >= max_depth - 1) && (max_depth != -1)) break;
         if (!scatter && vertex_) {
             PathVertex vertex = *vertex_;
             if (vertex.material_id == -1) {
                 current_medium = update_medium(ray, vertex, current_medium);
+                ray = Ray{ (*vertex_).position, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
                 bounces += 1;
                 continue;
             }
         }
+        
         if (!scatter && vertex_) {
             PathVertex vertex = *vertex_;
             if (is_light(scene.shapes[vertex.shape_id])) {
@@ -863,7 +872,7 @@ Spectrum vol_path_tracing(const Scene& scene,
 
 
         }
-        if ((bounces == max_depth - 1) && (max_depth != -1)) break;
+        
 
         if (scatter) {
             never_scatter = false;
