@@ -18,7 +18,8 @@ enum class Integrator {
     RayDifferential, // visualize radius & spread
     MipmapLevel,
     Path,
-    VolPath
+    VolPath,
+    RestirPath,
 };
 
 struct RenderOptions {

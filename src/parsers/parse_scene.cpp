@@ -552,7 +552,22 @@ RenderOptions parse_integrator(pugi::xml_node node,
                     child.attribute("value").value(), default_map);
             }
         }
-    } else if (type == "volpath") {
+    }
+    else if (type == "restirpath") {
+        options.integrator = Integrator::RestirPath;
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "maxDepth") {
+                options.max_depth = parse_integer(
+                    child.attribute("value").value(), default_map);
+            }
+            else if (name == "rrDepth") {
+                options.rr_depth = parse_integer(
+                    child.attribute("value").value(), default_map);
+            }
+        }
+    }
+    else if (type == "volpath") {
         options.integrator = Integrator::VolPath;
         for (auto child : node.children()) {
             std::string name = child.attribute("name").value();
