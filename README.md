@@ -40,3 +40,10 @@ We use [miniz](https://github.com/richgel999/miniz) for compression & decompress
 We use [tinyply](https://github.com/ddiakopoulos/tinyply) for parsing PLY files.
 
 Many scenes in the scenes folder are directly downloaded from [http://www.mitsuba-renderer.org/download.html](http://www.mitsuba-renderer.org/download.html). Scenes courtesy of Wenzel Jakob, Cornell Program of Computer Graphics, Marko Dabrovic, Eric Veach, Jonas Pilo, and Bernhard Vogl.
+
+
+# Reference
+1. Understanding The Math Behind ReStir DI(https://agraphicsguynotes.com/posts/understanding_the_math_behind_restir_di/)
+2. Importance Resampling for Global Illumination(https://scholarsarchive.byu.edu/cgi/viewcontent.cgi?article=1662&context=etd)
+3. A Gentle Introduction to ReSTIR: Path Reuse in Real-time(https://intro-to-restir.cwyman.org/)
+   
