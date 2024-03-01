@@ -3,6 +3,35 @@
 #include "pcg.h"
 
 
+struct Sample {
+    Real p1;
+    Real p2;
+    Spectrum C;
+};
+
+
+class Reservoir {
+public:
+    Real w_sum;
+    Real W;
+    Sample sample;
+    pcg32_state& rng;
+
+    // Constructor
+    Reservoir(pcg32_state& rng) : w_sum(0), W(0),
+        sample(Sample{ 0,0, make_zero_spectrum()}), rng(rng) {}
+
+    // Update method for reservoir sampling
+    void update(Sample x, Real w) {
+        Real u = next_pcg32_real<Real>(rng);
+        w_sum += w;
+        if (u < (w / w_sum)) {
+            sample = x;
+        }
+    }
+};
+
+
 /*Using RIS to combine NEE and bsdf sampling*/
 Spectrum restir_path_tracing_1(const Scene& scene,
     int x, int y, /* pixel coordinates */
@@ -12,8 +41,6 @@ Spectrum restir_path_tracing_1(const Scene& scene,
         (y + next_pcg32_real<Real>(rng)) / h);
     Ray ray = sample_primary(scene.camera, screen_pos);
     RayDifferential ray_diff = init_ray_differential(w, h);
-    Real p1, p2;
-    Spectrum C1, C2;
     std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
     if (!vertex_) {
         // Hit background. Account for the environment map if needed.
@@ -36,70 +63,80 @@ Spectrum restir_path_tracing_1(const Scene& scene,
             emission(vertex, -ray.dir, scene);
     }
     int max_depth = scene.options.max_depth;
+    int M = 16;
     for (int num_vertices = 3; max_depth == -1 || num_vertices <= max_depth + 1; num_vertices++) {
         const Material& mat = scene.materials[vertex.material_id];
         // First, we sample a point on the light source.
         // We do this by first picking a light source, then pick a point on it.
-        Vector2 light_uv{ next_pcg32_real<Real>(rng), next_pcg32_real<Real>(rng) };
-        Real light_w = next_pcg32_real<Real>(rng);
-        Real shape_w = next_pcg32_real<Real>(rng);
-        int light_id = sample_light(scene, light_w);
-        const Light& light = scene.lights[light_id];
-        PointAndNormal point_on_light =
-            sample_point_on_light(light, vertex.position, light_uv, shape_w, scene);
+        Reservoir r(rng);
+        for (int i = 0; i < M; i++) {
+            Vector2 light_uv{ next_pcg32_real<Real>(rng), next_pcg32_real<Real>(rng) };
+            Real light_w = next_pcg32_real<Real>(rng);
+            Real shape_w = next_pcg32_real<Real>(rng);
+            int light_id = sample_light(scene, light_w);
+            const Light& light = scene.lights[light_id];
+            PointAndNormal point_on_light =
+                sample_point_on_light(light, vertex.position, light_uv, shape_w, scene);
 
-        C1 = make_zero_spectrum();
-      
-        {
+            Spectrum C1 = make_zero_spectrum();
             Real G = 0;
             Vector3 dir_light;
             if (!is_envmap(light)) {
                 dir_light = normalize(point_on_light.position - vertex.position);
-              
+
                 Ray shadow_ray{ vertex.position, dir_light,
-                               get_shadow_epsilon(scene),
-                               (1 - get_shadow_epsilon(scene)) *
-                                   distance(point_on_light.position, vertex.position) };
+                                get_shadow_epsilon(scene),
+                                (1 - get_shadow_epsilon(scene)) *
+                                    distance(point_on_light.position, vertex.position) };
                 if (!occluded(scene, shadow_ray)) {
-                   
+
                     G = max(-dot(dir_light, point_on_light.normal), Real(0)) /
                         distance_squared(point_on_light.position, vertex.position);
                 }
             }
             else {
-               
+
                 dir_light = -point_on_light.normal;
-               
+
                 Ray shadow_ray{ vertex.position, dir_light,
-                               get_shadow_epsilon(scene),
-                               infinity<Real>() /* envmaps are infinitely far away */ };
+                                get_shadow_epsilon(scene),
+                                infinity<Real>() /* envmaps are infinitely far away */ };
                 if (!occluded(scene, shadow_ray)) {
 
                     G = 1;
                 }
             }
 
-          
-            p1 = light_pmf(scene, light_id) *
+            Real p2 = 0;
+            Real p1 = light_pmf(scene, light_id) *
                 pdf_point_on_light(light, point_on_light, vertex.position, scene);
-            // We don't need to continue the computation if G is 0.
-            // Also sometimes there can be some numerical issue such that we generate
-            // a light path with probability zero
+                
             if (G > 0 && p1 > 0) {
                 Vector3 dir_view = -ray.dir;
                 assert(vertex.material_id >= 0);
                 Spectrum f = eval(mat, dir_view, dir_light, vertex, scene.texture_pool);
 
-              
+
                 Spectrum L = emission(light, -dir_light, Real(0), point_on_light, scene);
 
                 C1 = G * f * L;
 
-            }
-        }
+                p2 = pdf_sample_bsdf(
+                    mat, dir_view, dir_light, vertex, scene.texture_pool);
 
+                p2 *= G;
+            }
+            Real w = ((C1.x + C1.y + C1.z) / 3) / (M * p1);
+            r.update(Sample{p1,p2,C1 }, w);
+        }
+        if ((r.sample.C.x+ r.sample.C.y+ r.sample.C.z) > 0) {
+            
+            r.W = r.w_sum / ((r.sample.C.x + r.sample.C.y + r.sample.C.z) / 3);
+            radiance += current_path_throughput * r.sample.C * r.W * ((r.sample.p1 * r.sample.p1) / (r.sample.p1 * r.sample.p1 + r.sample.p2 * r.sample.p2));
+        }
+        
+        
         // Let's do the hemispherical sampling next.
-        C2 = make_zero_spectrum();
         Vector3 dir_view = -ray.dir;
         Vector2 bsdf_rnd_param_uv{ next_pcg32_real<Real>(rng), next_pcg32_real<Real>(rng) };
         Real bsdf_rnd_param_w = next_pcg32_real<Real>(rng);
@@ -144,7 +181,7 @@ Spectrum restir_path_tracing_1(const Scene& scene,
         }
 
         Spectrum f = eval(mat, dir_view, dir_bsdf, vertex, scene.texture_pool);
-        p2 = pdf_sample_bsdf(mat, dir_view, dir_bsdf, vertex, scene.texture_pool);
+        Real p2 = pdf_sample_bsdf(mat, dir_view, dir_bsdf, vertex, scene.texture_pool);
         if (p2 <= 0) {
             // Numerical issue -- we generated some invalid rays.
             break;
@@ -154,10 +191,28 @@ Spectrum restir_path_tracing_1(const Scene& scene,
         p2 *= G;
         // note that G cancels out in the division f/p, but we still need
         // G later for the calculation of w2.
+
+        // Now we want to check whether dir_bsdf hit a light source, and
+        // account for the light contribution (C2 & w2 & p2).
+        // There are two possibilities: either we hit an emissive surface,
+        // or we hit an environment map.
+        // We will handle them separately.
         if (bsdf_vertex && is_light(scene.shapes[bsdf_vertex->shape_id])) {
             // G & f are already computed.
             Spectrum L = emission(*bsdf_vertex, -dir_bsdf, scene);
-            C2 = G * f * L;
+            Spectrum C2 = G * f * L;
+            // Next let's compute p1(v2): the probability of the light source sampling
+            // directly drawing the point corresponds to bsdf_dir.
+            int light_id = get_area_light_id(scene.shapes[bsdf_vertex->shape_id]);
+            assert(light_id >= 0);
+            const Light& light = scene.lights[light_id];
+            PointAndNormal light_point{ bsdf_vertex->position, bsdf_vertex->geometric_normal };
+            Real p1 = light_pmf(scene, light_id) *
+                pdf_point_on_light(light, light_point, vertex.position, scene);
+            Real w2 = (p2 * p2) / (p1 * p1 + p2 * p2);
+
+            C2 /= p2;
+            radiance += current_path_throughput * C2 * w2;
         }
         else if (!bsdf_vertex && has_envmap(scene)) {
             // G & f are already computed.
@@ -167,29 +222,17 @@ Spectrum restir_path_tracing_1(const Scene& scene,
                 ray_diff.spread,
                 PointAndNormal{}, // dummy parameter for envmap
                 scene);
-            C2 = G * f * L;
+            Spectrum C2 = G * f * L;
+            // Next let's compute p1(v2): the probability of the light source sampling
+            // directly drawing the direction bsdf_dir.
+            PointAndNormal light_point{ Vector3{0, 0, 0}, -dir_bsdf }; // pointing outwards from light
+            Real p1 = light_pmf(scene, scene.envmap_light_id) *
+                pdf_point_on_light(light, light_point, vertex.position, scene);
+            Real w2 = (p2 * p2) / (p1 * p1 + p2 * p2);
+
+            C2 /= p2;
+            radiance += current_path_throughput * C2 * w2;
         }
-        
-        //do RIS
-        Real W;
-        Real m1 = p1 / (p1 + p2);
-        Real m2 = p2 / (p1 + p2);
-        Real w1 = m1 / p1 * ((C1.x+C1.y+C1.z)/3);
-        Real w2 = m2 / p2 * ((C2.x + C2.y + C2.z) / 3);
-        if (w1 > w2) {
-            W = (w1 + w2) / ((C1.x + C1.y + C1.z) / 3);
-            radiance = radiance+current_path_throughput * C1 * W;
-            
-        }
-        else {
-            if (w2 > 0) {
-                W = (w1 + w2) / ((C2.x + C2.y + C2.z) / 3);
-                radiance = radiance + current_path_throughput * C2 * W;
-            }
-            
-        }
-        
-        
 
         if (!bsdf_vertex) {
             // Hit nothing -- can't continue tracing.
