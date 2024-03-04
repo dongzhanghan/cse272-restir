@@ -1,10 +1,10 @@
 #pragma once
 
 #include "vector.h"
-
 #include <string>
 #include <cstring>
 #include <vector>
+#include "reservoir.h"
 
 /// A N-channel image stored in a contiguous vector
 /// The storage format is HWC -- outer dimension is height
@@ -40,7 +40,7 @@ struct Image {
 
 using Image1 = Image<Real>;
 using Image3 = Image<Vector3>;
-
+using ImageReservoir = Image<Reservoir>;
 /// Read from an 1 channel image. If the image is not actually
 /// single channel, the first channel is used.
 /// Supported formats: JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC

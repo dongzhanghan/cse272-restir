@@ -8,11 +8,11 @@
 #include "progress_reporter.h"
 #include "scene.h"
 #include "restir_path_tracing.h"
+
 /// Render auxiliary buffers e.g., depth.
 Image3 aux_render(const Scene &scene) {
     int w = scene.camera.width, h = scene.camera.height;
     Image3 img(w, h);
-
     constexpr int tile_size = 16;
     int num_tiles_x = (w + tile_size - 1) / tile_size;
     int num_tiles_y = (h + tile_size - 1) / tile_size;
@@ -154,32 +154,67 @@ Image3 vol_path_render(const Scene &scene) {
 
 Image3 restir_path_render(const Scene& scene) {
     int w = scene.camera.width, h = scene.camera.height;
-    Image3 img(w, h);
-
+    Image3 img(w, h);   
     constexpr int tile_size = 16;
     int num_tiles_x = (w + tile_size - 1) / tile_size;
     int num_tiles_y = (h + tile_size - 1) / tile_size;
-
-    ProgressReporter reporter(num_tiles_x * num_tiles_y);
-    parallel_for([&](const Vector2i& tile) {
-        // Use a different rng stream for each thread.
-        pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0]);
-        int x0 = tile[0] * tile_size;
-        int x1 = min(x0 + tile_size, w);
-        int y0 = tile[1] * tile_size;
-        int y1 = min(y0 + tile_size, h);
-        for (int y = y0; y < y1; y++) {
-            for (int x = x0; x < x1; x++) {
-                Spectrum radiance = make_zero_spectrum();
-                int spp = scene.options.samples_per_pixel;
-                for (int s = 0; s < spp; s++) {
-                    radiance += restir_path_tracing_1(scene, x, y, rng);
-                }
-                img(x, y) = radiance / Real(spp);
+    int spp = scene.options.samples_per_pixel;
+    ProgressReporter reporter(spp);  
+    
+    for (int i = 0; i < spp; i++) {
+        ImageReservoir imgReservoir(w, h);
+        std::vector<std::vector<pcg32_state> > rngs(num_tiles_x);
+        for (int rng_i = 0; rng_i < num_tiles_x; rng_i++) {
+            rngs[rng_i] = std::vector<pcg32_state>(num_tiles_y);
+            for (int rng_j = 0; rng_j < num_tiles_y; rng_j++) {
+                rngs[rng_i].push_back(init_pcg32(rng_j * num_tiles_x + rng_i));
             }
         }
-        reporter.update(1);
+        parallel_for([&](const Vector2i& tile) {
+            pcg32_state rng = rngs[tile[0]][tile[1]];
+            int x0 = tile[0] * tile_size;
+            int x1 = min(x0 + tile_size, w);
+            int y0 = tile[1] * tile_size;
+            int y1 = min(y0 + tile_size, h);
+            for (int y = y0; y < y1; y++) {
+                for (int x = x0; x < x1; x++) {
+                    int w = scene.camera.width, h = scene.camera.height;
+                    Vector2 screen_pos((x + next_pcg32_real<Real>(rng)) / w,
+                        (y + next_pcg32_real<Real>(rng)) / h);
+                    Ray ray = sample_primary(scene.camera, screen_pos);
+                    RayDifferential ray_diff = init_ray_differential(w, h);
+                    std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
+                    if (!vertex_) {
+                        break;
+                    }
+                    PathVertex vertex = *vertex_;
+                    RIS(scene, rng, vertex, ray, imgReservoir(x, y));
+                }
+            }
+
+            }, Vector2i(num_tiles_x, num_tiles_y));
+        parallel_for([&](const Vector2i& tile) {
+            // Use a different rng stream for each thread.
+            pcg32_state rng = rngs[tile[0]][tile[1]];
+            int x0 = tile[0] * tile_size;
+            int x1 = min(x0 + tile_size, w);
+            int y0 = tile[1] * tile_size;
+            int y1 = min(y0 + tile_size, h);
+            
+
+            for (int y = y0; y < y1; y++) {
+                for (int x = x0; x < x1; x++) {
+                    Spectrum radiance = make_zero_spectrum();
+                    //radiance += path_tracing(scene, x, y, rng);
+                    radiance = restir_path_tracing_1(scene, x, y, rng, imgReservoir);
+                    img(x, y) += radiance / Real(spp);
+                }
+            }
+            
         }, Vector2i(num_tiles_x, num_tiles_y));
+        reporter.update(1);
+    }
+    
     reporter.done();
     return img;
 }
