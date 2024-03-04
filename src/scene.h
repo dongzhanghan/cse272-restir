@@ -29,6 +29,7 @@ struct RenderOptions {
     int rr_depth = 5;
     int vol_path_version = 0;
     int max_null_collisions = 1000;
+    int reservoirNumber = 16;
 };
 
 /// Bounding sphere

@@ -159,17 +159,17 @@ Image3 restir_path_render(const Scene& scene) {
     int num_tiles_x = (w + tile_size - 1) / tile_size;
     int num_tiles_y = (h + tile_size - 1) / tile_size;
     int spp = scene.options.samples_per_pixel;
-    ProgressReporter reporter(spp);  
-    
-    for (int i = 0; i < spp; i++) {
-        ImageReservoir imgReservoir(w, h);
-        std::vector<std::vector<pcg32_state> > rngs(num_tiles_x);
-        for (int rng_i = 0; rng_i < num_tiles_x; rng_i++) {
-            rngs[rng_i] = std::vector<pcg32_state>(num_tiles_y);
-            for (int rng_j = 0; rng_j < num_tiles_y; rng_j++) {
-                rngs[rng_i].push_back(init_pcg32(rng_j * num_tiles_x + rng_i));
-            }
+
+    std::vector<std::vector<pcg32_state> > rngs(num_tiles_x);
+    for (int rng_i = 0; rng_i < num_tiles_x; rng_i++) {
+        rngs[rng_i] = std::vector<pcg32_state>(num_tiles_y);
+        for (int rng_j = 0; rng_j < num_tiles_y; rng_j++) {
+            rngs[rng_i].push_back(init_pcg32(rng_j * num_tiles_x + rng_i));
         }
+    }
+    ProgressReporter reporter(spp);    
+    for (int i = 0; i < spp; i++) {     
+        ImageReservoir imgReservoir(w, h);
         parallel_for([&](const Vector2i& tile) {
             pcg32_state rng = rngs[tile[0]][tile[1]];
             int x0 = tile[0] * tile_size;

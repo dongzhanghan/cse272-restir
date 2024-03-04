@@ -565,6 +565,10 @@ RenderOptions parse_integrator(pugi::xml_node node,
                 options.rr_depth = parse_integer(
                     child.attribute("value").value(), default_map);
             }
+            else if (name == "reservoirNumber") {
+                options.reservoirNumber = parse_integer(
+                    child.attribute("value").value(), default_map);
+            }
         }
     }
     else if (type == "volpath") {

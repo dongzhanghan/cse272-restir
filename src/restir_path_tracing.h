@@ -76,7 +76,7 @@ Spectrum target_function(const Scene& scene,const PathVertex& vertex,const Ray& 
 
 void RIS(const Scene& scene,
     pcg32_state& rng,const PathVertex& vertex, Ray& ray, Reservoir& r) {
-    int M = 2;
+    int M = scene.options.reservoirNumber;
     const Material& mat = scene.materials[vertex.material_id];
     Real total_p1 = 0;
     for (int i = 0; i < M; i++) {
