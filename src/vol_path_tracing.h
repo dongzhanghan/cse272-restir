@@ -235,25 +235,19 @@ Spectrum vol_path_tracing_2(const Scene &scene,
     Ray ray = sample_primary(scene.camera, screen_pos);
     //disable ray differentials
     RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
-
     std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
     Real t_hit;
-    Spectrum sigma_t,sigma_s,sigma_a;
-    PhaseFunction phase;
+    //sigma is uniform around the space
+    Spectrum sigma_a = get_sigma_a(scene.media[scene.camera.medium_id], ray.org);
+    Spectrum sigma_s = get_sigma_s(scene.media[scene.camera.medium_id], ray.org);
+    Spectrum sigma_t = sigma_a + sigma_s;
+    PhaseFunction phase = get_phase_function(scene.media[scene.camera.medium_id]);
     if (!vertex_) {
-        t_hit = infinity<Real>();
-        sigma_a = get_sigma_a(scene.media[scene.camera.medium_id], ray.org);
-        sigma_s = get_sigma_s(scene.media[scene.camera.medium_id], ray.org);
-        sigma_t = sigma_a + sigma_s;
-        phase = get_phase_function(scene.media[scene.camera.medium_id]);
+        t_hit = infinity<Real>();      
     }
     else {      
         PathVertex vertex = *vertex_;
-        sigma_a = get_sigma_a(scene.media[vertex.exterior_medium_id], vertex.position);
-        sigma_s = get_sigma_s(scene.media[vertex.exterior_medium_id], vertex.position);
-        sigma_t = sigma_a + sigma_s;       
         t_hit = distance(vertex.position, ray.org);
-        phase = get_phase_function(scene.media[vertex.exterior_medium_id]);
     }
     Real u = next_pcg32_real<Real>(rng);
     Real t = -log(1 - u) / sigma_t.x;
@@ -261,12 +255,15 @@ Spectrum vol_path_tracing_2(const Scene &scene,
         Spectrum trans_pdf = exp(-sigma_t * t) * sigma_t;
         Spectrum transmittance = exp(-sigma_t * t);
         Vector3 p = ray.org + t * ray.dir;
+
+        //randomly sample a light source
         Vector2 light_uv{ next_pcg32_real<Real>(rng), next_pcg32_real<Real>(rng) };
         Real light_w = next_pcg32_real<Real>(rng);
         Real shape_w = next_pcg32_real<Real>(rng);
         int light_id = sample_light(scene, light_w);
         const Light& light = scene.lights[light_id];
         PointAndNormal point_on_light = sample_point_on_light(light, p, light_uv, shape_w, scene);
+        //the pdf of sampling the light source
         Real L_s1_pdf = light_pmf(scene, light_id) *
             pdf_point_on_light(light, point_on_light, p, scene);
         Spectrum L_s1_estimate;
@@ -277,10 +274,7 @@ Spectrum vol_path_tracing_2(const Scene &scene,
                                (1 - get_shadow_epsilon(scene)) *
                                    distance(point_on_light.position, p) };
         if (!occluded(scene, shadow_ray)) {
-            // geometry term is cosine at v_{i+1} divided by distance squared
-            // this can be derived by the infinitesimal area of a surface projected on
-            // a unit sphere -- it's the Jacobian between the area measure and the solid angle
-            // measure.
+            //evaluate the geometry termS
             G = max(-dot(dir_light, point_on_light.normal), Real(0)) /
                 distance_squared(point_on_light.position, p);
         }
@@ -288,6 +282,7 @@ Spectrum vol_path_tracing_2(const Scene &scene,
         return (transmittance / trans_pdf) * sigma_s * (L_s1_estimate / L_s1_pdf);
     }
     else {
+        //sampling distance > t_hit, add surface lighting
         PathVertex vertex = *vertex_;
         Spectrum trans_pdf = exp(-sigma_t * t_hit);
         Spectrum transmittance = exp(-sigma_t * t_hit);
@@ -312,7 +307,7 @@ Spectrum vol_path_tracing_3(const Scene &scene,
     Ray ray = sample_primary(scene.camera, screen_pos);
     //disable ray differentials
     RayDifferential ray_diff = RayDifferential{ Real(0), Real(0) };
-
+    //start from the camera, the medium is outer medium initially
     int current_medium = scene.camera.medium_id;
     Spectrum current_path_throughput = fromRGB(Vector3{ 1, 1, 1 });
     Spectrum radiance = make_zero_spectrum();
@@ -323,39 +318,48 @@ Spectrum vol_path_tracing_3(const Scene &scene,
         std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
         Spectrum transmittance = fromRGB(Vector3{ 1, 1, 1 });
         Spectrum trans_pdf = fromRGB(Vector3{ 1, 1, 1 });
+        Real t_hit;
         if (current_medium != -1) {
+            //we do transmittance sampling if the medium is not vaccum
             Spectrum sigma_a = get_sigma_a(scene.media[current_medium], ray.org);
             Spectrum sigma_s = get_sigma_s(scene.media[current_medium], ray.org);
             Spectrum sigma_t = sigma_a + sigma_s;
             Real u = next_pcg32_real<Real>(rng);
             Real t = -log(1 - u) / sigma_t.x;
             trans_pdf = exp(-sigma_t * t) * sigma_t;
-            transmittance = exp(-sigma_t * t);
-            Real t_hit;
-            if (!vertex_) {
+            transmittance = exp(-sigma_t * t);          
+            if (!vertex_) 
                 t_hit = infinity<Real>();
-            }
             else {
                 PathVertex vertex = *vertex_;
                 t_hit = distance(vertex.position, ray.org);
             }
             if (t < t_hit) {
                 scatter = true;
+                //update the ray origin if we hit a particle
                 ray.org = ray.org + t * ray.dir;
             }
             else {
                 trans_pdf = exp(-sigma_t * t_hit);
                 transmittance = exp(-sigma_t * t_hit);
+                //update the ray origin if we hit a surface/index-matching surface 
                 ray.org = ray.org + t_hit * (1 + get_intersection_epsilon(scene))*ray.dir;
             }         
+            //redefine the ray to avoid self intersection
+            ray = Ray{ ray.org, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
+        }
+        else if (t_hit != infinity<Real>()) {
+            //if we are in a vacuum but hit something, need to update the ray origin
+            ray.org = (*vertex_).position;
             ray = Ray{ ray.org, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
         }
         current_path_throughput *= (transmittance / trans_pdf);
         if (!scatter && vertex_) {
+            //if we hit something except particle(surface/index-matching surface)
             Spectrum Le = make_zero_spectrum();
             PathVertex vertex = *vertex_;
             if (is_light(scene.shapes[vertex.shape_id])) {
-                Le = emission(vertex, -ray.dir, scene);
+                Le = emission(vertex, -ray.dir, scene); //add the surface light if hit a surface
             }
             radiance += current_path_throughput * Le;
         }
@@ -363,16 +367,23 @@ Spectrum vol_path_tracing_3(const Scene &scene,
         if (!scatter && vertex_) {
             PathVertex vertex = *vertex_;
             if (vertex.material_id == -1) {
+                //if we hit an index-matching surface, update the current medium
                 current_medium = update_medium(ray, vertex, current_medium);
+                //add the bounces
                 bounces += 1;
+                //in the above code,we add (1 + get_intersection_epsilon(scene)) to t_hit, without this line
+                //we may be traped into an infinite loop if max-depth = -1, every time we sample distance
+                // and hit this index-matching surface and we continue
                 ray = Ray{ (*vertex_).position, ray.dir, get_intersection_epsilon(scene), infinity<Real>() };
                 continue;
             }
         }
         if (scatter) {
+            //if we hit a particle, get the phase function
             Spectrum sigma_s = get_sigma_s(scene.media[current_medium], ray.org);
             PhaseFunction phase = get_phase_function(scene.media[current_medium]);
             Vector2 rand_uv{ next_pcg32_real<Real>(rng), next_pcg32_real<Real>(rng) };
+            //Then we random sample a direction from phase function
             std::optional<Vector3> next_dir_ = sample_phase_function(phase, -ray.dir, rand_uv);
             if (next_dir_) {
                 Vector3 next_dir = *next_dir_;
@@ -380,15 +391,11 @@ Spectrum vol_path_tracing_3(const Scene &scene,
                     (eval(phase, -ray.dir, next_dir) / pdf_sample_phase(phase, -ray.dir, next_dir)) * sigma_s;
                 ray.dir = next_dir;
             }
-            else {
-                
-                break;
-            }
+            else break;
             
         }
-        else {
-            break;
-        }
+        else break;  //if we hit a surface, terminate 
+
         Real rr_prob = 1;
         if (bounces >= scene.options.rr_depth) {
             rr_prob = min(max(current_path_throughput), 0.95);

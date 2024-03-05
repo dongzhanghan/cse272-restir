@@ -160,18 +160,13 @@ Image3 restir_path_render(const Scene& scene) {
     int num_tiles_y = (h + tile_size - 1) / tile_size;
     int spp = scene.options.samples_per_pixel;
 
-    std::vector<std::vector<pcg32_state> > rngs(num_tiles_x);
-    for (int rng_i = 0; rng_i < num_tiles_x; rng_i++) {
-        rngs[rng_i] = std::vector<pcg32_state>(num_tiles_y);
-        for (int rng_j = 0; rng_j < num_tiles_y; rng_j++) {
-            rngs[rng_i].push_back(init_pcg32(rng_j * num_tiles_x + rng_i));
-        }
-    }
     ProgressReporter reporter(spp);    
     for (int i = 0; i < spp; i++) {     
         ImageReservoir imgReservoir(w, h);
+        ImageRay imgRay(w, h);
+        ImagePathVertex imgPathVertex(w, h);
         parallel_for([&](const Vector2i& tile) {
-            pcg32_state rng = rngs[tile[0]][tile[1]];
+            pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0]);
             int x0 = tile[0] * tile_size;
             int x1 = min(x0 + tile_size, w);
             int y0 = tile[1] * tile_size;
@@ -182,8 +177,10 @@ Image3 restir_path_render(const Scene& scene) {
                     Vector2 screen_pos((x + next_pcg32_real<Real>(rng)) / w,
                         (y + next_pcg32_real<Real>(rng)) / h);
                     Ray ray = sample_primary(scene.camera, screen_pos);
+                    imgRay(x, y) = ray;
                     RayDifferential ray_diff = init_ray_differential(w, h);
                     std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
+                    imgPathVertex(x, y) = vertex_;
                     if (!vertex_) {
                         break;
                     }
@@ -195,7 +192,7 @@ Image3 restir_path_render(const Scene& scene) {
             }, Vector2i(num_tiles_x, num_tiles_y));
         parallel_for([&](const Vector2i& tile) {
             // Use a different rng stream for each thread.
-            pcg32_state rng = rngs[tile[0]][tile[1]];
+            pcg32_state rng = init_pcg32(tile[1] * num_tiles_x + tile[0]);
             int x0 = tile[0] * tile_size;
             int x1 = min(x0 + tile_size, w);
             int y0 = tile[1] * tile_size;
@@ -206,7 +203,7 @@ Image3 restir_path_render(const Scene& scene) {
                 for (int x = x0; x < x1; x++) {
                     Spectrum radiance = make_zero_spectrum();
                     //radiance += path_tracing(scene, x, y, rng);
-                    radiance = restir_path_tracing_1(scene, x, y, rng, imgReservoir);
+                    radiance = restir_path_tracing_1(scene, x, y, imgPathVertex(x,y),imgRay(x,y), rng, imgReservoir);
                     img(x, y) += radiance / Real(spp);
                 }
             }

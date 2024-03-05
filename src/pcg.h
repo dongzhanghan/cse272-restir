@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PCG_H
+#define PCG_H
 
 #include "lajolla.h"
 
@@ -66,3 +67,5 @@ double next_pcg32_real(pcg32_state &rng) {
     x.u = ((uint64_t) next_pcg32(rng) << 20) | 0x3ff0000000000000ULL;
     return x.d - 1.0;
 }
+
+#endif

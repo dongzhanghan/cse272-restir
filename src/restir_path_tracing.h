@@ -156,15 +156,10 @@ void combineReservoirsUnbiased(const Scene& scene,
 
 
 Spectrum restir_path_tracing_1(const Scene& scene,
-    int x, int y, /* pixel coordinates */
+    int x, int y, std::optional<PathVertex> vertex_, Ray& ray, /* pixel coordinates */
     pcg32_state& rng, ImageReservoir& imgReservoir) {
     int w = scene.camera.width, h = scene.camera.height;
-    Vector2 screen_pos((x + next_pcg32_real<Real>(rng)) / w,
-        (y + next_pcg32_real<Real>(rng)) / h);
-    Ray ray = sample_primary(scene.camera, screen_pos);
-    RayDifferential ray_diff = init_ray_differential(w, h);
-    std::optional<PathVertex> vertex_ = intersect(scene, ray, ray_diff);
-    
+    RayDifferential ray_diff = init_ray_differential(w, h); 
     if (!vertex_) {
         // Hit background. Account for the environment map if needed.
         if (has_envmap(scene)) {
@@ -206,10 +201,9 @@ Spectrum restir_path_tracing_1(const Scene& scene,
 
             //combineReservoirs(scene, vertex, ray, reservoirs, r);
 
-            combineReservoirsUnbiased(scene, vertex, ray, reservoirs, r);
+            //combineReservoirsUnbiased(scene, vertex, ray, reservoirs, r);
 
-            //Reservoir r(next_pcg32_real<Real>(rng));
-            //RIS(scene, rng, vertex, ray, r);
+            RIS(scene, rng, vertex, ray, r);
             Spectrum C1 = make_zero_spectrum();
             Real w1 = 0;
             Real G = 0;

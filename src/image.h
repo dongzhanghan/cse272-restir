@@ -5,7 +5,8 @@
 #include <cstring>
 #include <vector>
 #include "reservoir.h"
-
+#include "ray.h"
+#include "intersection.h"
 /// A N-channel image stored in a contiguous vector
 /// The storage format is HWC -- outer dimension is height
 /// then width, then channels.
@@ -41,6 +42,8 @@ struct Image {
 using Image1 = Image<Real>;
 using Image3 = Image<Vector3>;
 using ImageReservoir = Image<Reservoir>;
+using ImageRay = Image<Ray>;
+using ImagePathVertex = Image<std::optional<PathVertex>>;
 /// Read from an 1 channel image. If the image is not actually
 /// single channel, the first channel is used.
 /// Supported formats: JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC
