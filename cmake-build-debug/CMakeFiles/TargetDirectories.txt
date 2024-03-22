@@ -1,0 +1,12 @@
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/lajolla_lib.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/lajolla.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_filter.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_frame.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_image.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_intersection.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_materials.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_matrix.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test_mipmap.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/test.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug/CMakeFiles/rebuild_cache.dir

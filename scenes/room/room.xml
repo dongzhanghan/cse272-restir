@@ -1,0 +1,356 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+
+<!-- Camera and Rendering Parameters -->
+
+<!--	<integrator type="path" id="elm__0" name="elm__0">-->
+		<integrator type="restirpath" id="elm__0" name="elm__0">
+		<integer name="max_depth" value="12"/>
+		<integer name="reservoirNumber" value="16"/>
+	</integrator>
+
+<!--	<sensor type="perspective">-->
+<!--		<string name="fovAxis" value="smaller"/>-->
+<!--		<float name="nearClip" value="10"/>-->
+<!--		<float name="farClip" value="2800"/>-->
+<!--		<float name="focusDistance" value="1000"/>-->
+<!--		<transform name="toWorld">-->
+<!--			<lookAt origin="27.8, 27.3, -80.0" target="27.8, 27.3, -79.9" up="0, 1, 0"/>-->
+<!--		</transform>-->
+<!--		<float name="fov" value="39.3077"/>-->
+
+<!--		<sampler type="independent">-->
+<!--			<integer name="sampleCount" value="256"/>-->
+<!--		</sampler>-->
+
+<!--		<film type="hdrfilm" id="film">-->
+<!--			<integer name="width" value="683"/>-->
+<!--			<integer name="height" value="512"/>-->
+<!--			<string name="pixelFormat" value="rgb"/>-->
+<!--			<boolean name="banner" value="false"/>-->
+
+<!--			<rfilter type="gaussian"/>-->
+<!--		</film>-->
+<!--	</sensor>-->
+
+	<sensor type="perspective" id="Camera-camera">
+		<string name="fovAxis" value="smaller"/>
+		<float name="focusDistance" value="10.0"/>
+		<float name="fov" value="10"/>
+		<transform name="toWorld">
+			<lookAt target="0, 0, -1.1" origin="-15.69558, -7.46243, -0.0463" up="-2.1, -1, 0"/>
+		</transform>
+
+		<sampler type="independent">
+			<integer name="sampleCount" value="400"/>
+		</sampler>
+
+		<film type="hdrfilm" id="film">
+			<integer name="width" value="683"/>
+			<integer name="height" value="512"/>
+			<string name="pixelFormat" value="rgb"/>
+			<boolean name="banner" value="false"/>
+
+			<rfilter type="gaussian"/>
+		</film>
+	</sensor>
+
+<!--	<emitter type="envmap" id="Area_002-light">-->
+<!--		<string name="filename" value="matpreview/envmap.exr"/>-->
+<!--		<transform name="toWorld">-->
+<!--			<rotate y="1" angle="-180"/>-->
+<!--			<matrix value="-0.224951 -0.000001 -0.974370 0.000000 -0.974370 0.000000 0.224951 0.000000 0.000000 1.000000 -0.000001 8.870000 0.000000 0.000000 0.000000 1.000000 "/>-->
+<!--		</transform>-->
+<!--		<float name="scale" value="3"/>-->
+<!--	</emitter>-->
+
+<!--	<emitter type="envmap" id="Area_002-light">-->
+<!--		<string name="filename" value="matpreview/envmap.exr"/>-->
+<!--		<transform name="toWorld">-->
+<!--			<rotate y="1" angle="-180"/>-->
+<!--			<matrix value="-0.224951 -0.000001 -0.974370 0.000000 -0.974370 0.000000 0.224951 0.000000 0.000000 1.000000 -0.000001 8.870000 0.000000 0.000000 0.000000 1.000000 "/>-->
+<!--		</transform>-->
+<!--		<float name="scale" value="3"/>-->
+<!--	</emitter>-->
+
+		<emitter type="point">
+			<rgb name="position" value="100,400,100"/>
+		</emitter>
+<!-- Materials -->
+
+	<bsdf type="twosided" id="mat-standard" name="mat-standard">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.501900 0.501900 0.501900" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.798988"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.000900"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Stars" name="mat-Stars">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="1.000000 1.000000 1.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.621773"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+			<rgb name="emission" value="1.000000 1.000000 1.000000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="diffuse" id="empty-emitter-bsdf">
+		<rgb value="0.000000" name="reflectance"/>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Room wall floor" name="mat-Room wall floor">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.341100 0.082300 0.458800" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="1.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Moon" name="mat-Moon">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="1.000000 1.000000 1.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.621773"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+<!--			emmision-->
+			<rgb name="emission" value="1.000000 1.000000 1.000000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Lamp" name="mat-Lamp">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.211700 0.223500 0.262700" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.728108"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+			<rgb name="emission" value="1.000000 1.000000 1.000000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Furniture" name="mat-Furniture">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.478400 0.388200 0.356800" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.839870"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Draw handlw" name="mat-Draw handlw">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.815600 0.639200 0.549000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.591675"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Book2" name="mat-Book2">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.333300 0.235200 0.188200" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.798988"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Book1" name="mat-Book1">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.709800 0.243100 0.282300" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.798988"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Blanket" name="mat-Blanket">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.466600 0.023500 0.415600" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="1.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Pillow" name="mat-Pillow">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="0.698000 0.070500 0.596000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="1.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Lamp liggt" name="mat-Lamp liggt">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="1.000000 0.490100 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="1.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Glass Window" name="mat-Glass Window">
+		<bsdf type="principled" name="bsdf">
+			<rgb value="1.000000 0.650900 0.917600" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.700151"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.001600"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+
+<!-- Emitters -->
+	<shape type="ply" id="elm__4" name="elm__4">
+		<string name="filename" value="meshes/139.ply"/>
+		<ref id="empty-emitter-bsdf" name="bsdf"/>
+		<emitter type="area">
+			<rgb value="20.000000 20.000000 20.000000" name="radiance"/>
+		</emitter>
+	</shape>
+	<shape type="ply" id="elm__8" name="elm__8">
+		<string name="filename" value="meshes/117.ply"/>
+		<ref id="empty-emitter-bsdf" name="bsdf"/>
+		<emitter type="area">
+			<rgb value="20.000000 20.000000 20.000000" name="radiance"/>
+		</emitter>
+	</shape>
+	<shape type="ply" id="elm__24" name="elm__24">
+		<string name="filename" value="meshes/15.ply"/>
+		<ref id="empty-emitter-bsdf" name="bsdf"/>
+		<emitter type="area">
+			<rgb value="20.000000 20.000000 20.000000" name="radiance"/>
+		</emitter>
+	</shape>
+<!-- Shapes -->
+
+	<shape type="ply" id="elm__2" name="elm__2">
+		<string name="filename" value="meshes/152.ply"/>
+		<ref id="mat-standard" name="bsdf"/>
+	</shape>
+
+	<shape type="ply" id="elm__6" name="elm__6">
+		<string name="filename" value="meshes/128.ply"/>
+		<ref id="mat-Room wall floor" name="bsdf"/>
+	</shape>
+
+	<shape type="ply" id="elm__10" name="elm__10">
+		<string name="filename" value="meshes/104.ply"/>
+		<ref id="mat-Lamp" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__12" name="elm__12">
+		<string name="filename" value="meshes/91.ply"/>
+		<ref id="mat-Furniture" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__14" name="elm__14">
+		<string name="filename" value="meshes/78.ply"/>
+		<ref id="mat-Draw handlw" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__16" name="elm__16">
+		<string name="filename" value="meshes/65.ply"/>
+		<ref id="mat-Book2" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__18" name="elm__18">
+		<string name="filename" value="meshes/52.ply"/>
+		<ref id="mat-Book1" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__20" name="elm__20">
+		<string name="filename" value="meshes/39.ply"/>
+		<ref id="mat-Blanket" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="elm__22" name="elm__22">
+		<string name="filename" value="meshes/28.ply"/>
+		<ref id="mat-Pillow" name="bsdf"/>
+	</shape>
+
+	<shape type="ply" id="elm__26" name="elm__26">
+		<string name="filename" value="meshes/3.ply"/>
+		<ref id="mat-Glass Window" name="bsdf"/>
+	</shape>
+
+<!-- Volumes -->
+
+</scene>

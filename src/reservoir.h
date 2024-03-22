@@ -24,7 +24,7 @@ public:
     void update(Sample& x, Real w) {
         w_sum += w;
         M++;
-        if (u < (w / w_sum)) {
+        if (u < (w / w_sum) && w_sum > 0) {
             sample.light_id = x.light_id;
             sample.point_on_light = x.point_on_light;
         }

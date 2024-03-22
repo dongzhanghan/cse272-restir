@@ -1,0 +1,132 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-RelWithDebInfo-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "lajolla",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "lajolla::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lajolla-RelWithDebInfo-994d5ab393f54094bdc6.json",
+					"name" : "lajolla",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lajolla_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lajolla_lib-RelWithDebInfo-b96ced6802426c1dde80.json",
+					"name" : "lajolla_lib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_filter::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_filter-RelWithDebInfo-cb5aefc322159950fb3f.json",
+					"name" : "test_filter",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_frame::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_frame-RelWithDebInfo-0561cd431c4fc3f78c7b.json",
+					"name" : "test_frame",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_image::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_image-RelWithDebInfo-e80755b03c8c0fea8763.json",
+					"name" : "test_image",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_intersection::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_intersection-RelWithDebInfo-1ff921a75e08fcce9069.json",
+					"name" : "test_intersection",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_materials::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_materials-RelWithDebInfo-6ccf5214ca8022c0c6b6.json",
+					"name" : "test_materials",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_matrix::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_matrix-RelWithDebInfo-5e544f4d7a869caa919e.json",
+					"name" : "test_matrix",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_mipmap::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_mipmap-RelWithDebInfo-9e5513b9e2240e2aec63.json",
+					"name" : "test_mipmap",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/pennie/Documents/Workspaces/cse272-restir/cmake-build-debug",
+		"source" : "/Users/pennie/Documents/Workspaces/cse272-restir"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

@@ -13,6 +13,8 @@ TriangleMesh parse_ply(const fs::path &filename, const Matrix4x4 &to_world) {
 
     std::shared_ptr<tinyply::PlyData> vertices, uvs, normals, faces;
     try {
+        //
+        //td::cout << "Requesting properties from vertex element" << std::endl;
         vertices = ply_file.request_properties_from_element("vertex", { "x", "y", "z" });
     } catch (const std::exception & e) { 
         Error(std::string("Vertex positions not found in ") + filename.string());

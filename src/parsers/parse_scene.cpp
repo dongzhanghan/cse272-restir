@@ -571,6 +571,24 @@ RenderOptions parse_integrator(pugi::xml_node node,
             }
         }
     }
+    else if (type == "testvariancerestirpath") {
+        options.integrator = Integrator::TestVarianceRestirPath;
+        for (auto child : node.children()) {
+            std::string name = child.attribute("name").value();
+            if (name == "maxDepth") {
+                options.max_depth = parse_integer(
+                        child.attribute("value").value(), default_map);
+            }
+            else if (name == "rrDepth") {
+                options.rr_depth = parse_integer(
+                        child.attribute("value").value(), default_map);
+            }
+            else if (name == "reservoirNumber") {
+                options.reservoirNumber = parse_integer(
+                        child.attribute("value").value(), default_map);
+            }
+        }
+    }
     else if (type == "volpath") {
         options.integrator = Integrator::VolPath;
         for (auto child : node.children()) {

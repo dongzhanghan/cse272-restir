@@ -20,6 +20,7 @@ enum class Integrator {
     Path,
     VolPath,
     RestirPath,
+    TestVarianceRestirPath,
 };
 
 struct RenderOptions {
